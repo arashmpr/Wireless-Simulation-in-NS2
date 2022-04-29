@@ -1,3 +1,5 @@
+Mac/802_11 set bandwidth [lindex $argv 0]
+
 # =======================
 # Define options
 # =======================
@@ -6,10 +8,11 @@ set opt(chan) Channel/WirelessChannel
 set opt(prop) Propagation/TwoRayGround
 set opt(ll) LL 
 set opt(ifq) Queue/DropTail/PriQueue
-set opt(ifqlen) 50
+set opt(ifqlen) 50                      ;# max packet size
 set opt(netif) Phy/WirelessPhy 
 set opt(mac) Mac/802_11 
-set opt(rp) DSDV 
+set opt(ant) Antenna/OmniAntenna
+set opt(rp) AODV 
 
 set opt(size) 9
 
@@ -20,11 +23,14 @@ set opt(size) 9
 set ns [new Simulator]
 
 # =======================
-# Define trace file
+# Define trace file and nam file
 # =======================
 
-set tracefd [open trace_file.tr w]
-$ns trace-all $tracefd
+set trace_file [open wireless_trace_file.tr w]
+$ns trace-all $trace_file
+
+set nam_file [open wireless_nam_file w]
+$ns namtrace-all-wireless $nam_file 500 500
 
 # =======================
 # Define Finish proc
@@ -32,12 +38,13 @@ $ns trace-all $tracefd
 proc finish {} {
     global ns tracefd namtrace
     $ns flush-trace
-    close $tracefd
-    close $namtrace
+    close $trace_file
+    close $nam_file
     exit 0
 }
 
-set val(finish) 100 ;# time to finish the simulation
+set val(run_time) 100       ;# simulation time
+set val(start_ftp_time) 1.0 ;# start ftp connection time    
 
 # =======================
 # Create topology object
@@ -60,8 +67,8 @@ $ns node-config -adhocRouting $opt(rp) \
                 -antType $opt(ant) \
                 -propType $opt(prop) \
                 -phyType $opt(netif) \
-                -topoInstance $topo \
                 -channelType $opt(chan) \
+                -topoInstance $topo \
                 -agentTrace ON \
                 -routerTrace ON \
                 -macTrace OFF \
@@ -140,9 +147,33 @@ $node_(8)) set Z 0
 # =======================
 
 #setting the tcp and sink agent
-set source [new Agent/TCP]
-set sink [new Agent/TCPSink]
+set a_source [new Agent/TCP]
+set h_sink [new Agent/TCPSink]
+
+set d_source [new Agent/TCP]
+set l_sink [new Agent/TCPSink]
 
 #attaching source and sink agents to nodes
 
+$ns attach-agent $n0 $a_source
+$ns attach-agent $n7 $h_sink
 
+$ns attach-agent $n2 $d_source
+$ns attach-agent $n8 $l_sink
+
+$ns connect $a_source $h_sink
+$ns connect $d_source $l_sink
+
+set ah_ftp [new Application/FTP]
+set dl_ftp [new Application/FTP]
+
+$ah_ftp attach-agent $a_source
+$dl_ftp attach-agent $d_source
+
+#run ftp connection
+$ns at $val(start_ftp_time) "$ah_ftp running..."
+$ns at $val(start_ftp_time) "$dl_ftp running..."
+
+#run the connection
+
+$ns run
