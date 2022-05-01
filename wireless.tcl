@@ -1,5 +1,3 @@
-Mac/802_11 set bandwidth [lindex $argv 0]
-
 # =======================
 # Define options
 # =======================
@@ -15,6 +13,23 @@ set opt(ant) Antenna/OmniAntenna
 set opt(rp) AODV 
 
 set opt(size) 9
+
+# =======================
+# Define values
+# =======================
+
+set val(packet_size) 512
+set val(rate) 200kb
+set val(run_time) 100       ;# simulation time
+set val(start_time) 1.0 ;# start ftp connection time  
+
+# ====================================================================
+# Setting Phy Paramaters
+#    - Description of each knob can be found in /ns-2.35/mac/wireless-phy.h 
+# ====================================================================
+Phy/WirelessPhy set bandwidth_ 1.5Mb
+Phy/WirelessPhy set CSThresh_ 1.7615e-10 ; 
+Phy/WirelessPhy set Pt_ 0.282
 
 # =======================
 # Define NS simulator
@@ -41,10 +56,7 @@ proc finish {} {
     close $trace_file
     close $nam_file
     exit 0
-}
-
-set val(run_time) 100       ;# simulation time
-set val(start_ftp_time) 1.0 ;# start ftp connection time    
+} 
 
 # =======================
 # Create topology object
@@ -143,36 +155,53 @@ $node_(8) set Y 200
 $node_(8)) set Z 0
 
 # =======================
-# Create Agents
+# Create udp traffic from node A to node H
+# =======================
+set a_udp [new Agent/UDP]
+set h_cbr [new Application/Traffic/CBR]
+
+$ns attach-agent $node_(0) $a_udp
+$ns attach-agent $node_(7) $h_cbr
+$ns connect $a_udp $h_cbr
+
+$h_cbr attach-agent $a_udp
+$h_cbr set packetSize_ $val(packet_size)
+$h_cbr set rate_ $val(rate)
+
+
+
+# =======================
+# Create udp traffic from node D to node L
+# =======================
+set d_udp [new Agent/UDP]
+set l_cbr [new Application/Traffic/CBR]
+
+$ns attach-agent $node_(3) $d_udp
+$ns attach-agent $node_(8) $l_cbr
+$ns connect $d_udp $l_cbr
+
+$l_cbr attach-agent $a_udp
+$l_cbr set packetSize_ $val(packet_size)
+$l_cbr set rate_ $val(rate)
+
+# =======================
+# Running agents
 # =======================
 
-#setting the tcp and sink agent
-set a_source [new Agent/TCP]
-set h_sink [new Agent/TCPSink]
+$ns at $val(start_time) "$a_udp start"
+$ns at $val(run_time)   "$a_udp stop"
 
-set d_source [new Agent/TCP]
-set l_sink [new Agent/TCPSink]
+$ns at $val(start_time) "$d_udp start"
+$ns at $val(run_time)   "$d_udp stop"
 
-#attaching source and sink agents to nodes
 
-$ns attach-agent $n0 $a_source
-$ns attach-agent $n7 $h_sink
+for {set i 0} {$i < $val(size)} {incr i} {
+    $ns initial_node_pos $node_($i) 40
+    $ns at $val(run_time) "$node_($i) reset";
+}
 
-$ns attach-agent $n2 $d_source
-$ns attach-agent $n8 $l_sink
-
-$ns connect $a_source $h_sink
-$ns connect $d_source $l_sink
-
-set ah_ftp [new Application/FTP]
-set dl_ftp [new Application/FTP]
-
-$ah_ftp attach-agent $a_source
-$dl_ftp attach-agent $d_source
-
-#run ftp connection
-$ns at $val(start_ftp_time) "$ah_ftp running..."
-$ns at $val(start_ftp_time) "$dl_ftp running..."
+$ns at $val(run_time) "finish"
+$ns at [expr $val(run_time) + 0.1] "$ns halt"
 
 #run the connection
 
