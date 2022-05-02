@@ -59,19 +59,6 @@ proc finish {} {
 }
 
 # =======================
-# Define UniformError
-# =======================
-
-proc UniformError {} {
-	global error_rate
-	set error_model [new ErrorModel]
-	$error_model unit pkt
-	$error_model set rate_ $error_rate
-	$error_model ranvar [new RandomVariable/Uniform]
-	return $error_model
-}
-
-# =======================
 # Create topology object
 # =======================
 
@@ -97,8 +84,6 @@ $ns node-config -adhocRouting $opt(rp) \
                 -agentTrace ON \
                 -routerTrace ON \
                 -macTrace OFF \
-                -IncomingErrProc UniformError \
-                -OutgoingErrProc UniformError \
                 -movementTrace OFF
 
 # =======================
