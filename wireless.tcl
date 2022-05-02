@@ -196,11 +196,11 @@ $dl_cbr set rate_ $val(rate)
 # Running agents
 # =======================
 
-$ns at $val(start_time) "$a_udp start"
-$ns at $val(run_time)   "$a_udp stop"
+$ns at $val(start_time) "$a_udp_agent start"
+$ns at $val(run_time)   "$a_udp_agent stop"
 
-$ns at $val(start_time) "$d_udp start"
-$ns at $val(run_time)   "$d_udp stop"
+$ns at $val(start_time) "$d_udp_agent start"
+$ns at $val(run_time)   "$d_udp_agent stop"
 
 
 for {set i 0} {$i < $opt(size)} {incr i} {
