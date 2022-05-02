@@ -57,7 +57,7 @@ set val(rp)             DSDV                       ;# routing protocol
 set ns_		[new Simulator]
 set tracefd     [open simple.tr w]
 set nam_file [open simple w]
-$ns namtrace-all-wireless $nam_file 500 500
+$ns_ namtrace-all-wireless $nam_file 500 500
 $ns_ trace-all $tracefd
 
 # set up topography object
@@ -143,6 +143,7 @@ proc stop {} {
     global ns_ tracefd
     $ns_ flush-trace
     close $tracefd
+    close $nam_file
 }
 
 puts "Starting Simulation..."
