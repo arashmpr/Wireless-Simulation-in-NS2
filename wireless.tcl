@@ -146,44 +146,52 @@ $node_(6) set Z 0
 
 $node_(7) set X 250
 $node_(7) set Y 100
-$node_(7)) set Z 0
+$node_(7) set Z 0
 
 #node L
 
 $node_(8) set X 250
 $node_(8) set Y 200
-$node_(8)) set Z 0
+$node_(8) set Z 0
 
 # =======================
-# Create udp traffic from node A to node H
+# Create UDP flow for a-h nodes
 # =======================
-set a_udp [new Agent/UDP]
-set h_cbr [new Application/Traffic/CBR]
+set a_udp_agent [new Agent/UDP]
+set h_null_agent [new Agent/NUll]
 
-$ns attach-agent $node_(0) $a_udp
-$ns attach-agent $node_(7) $h_cbr
-$ns connect $a_udp $h_cbr
+$ns attach-agent $node_(0) $a_udp_agent
+$ns attach-agent $node_(7) $h_null_agent
 
-$h_cbr attach-agent $a_udp
-$h_cbr set packetSize_ $val(packet_size)
-$h_cbr set rate_ $val(rate)
-
-
+$ns connect $a_udp_agent $h_null_agent
 
 # =======================
-# Create udp traffic from node D to node L
+# Create UDP flow for d-l nodes
 # =======================
-set d_udp [new Agent/UDP]
-set l_cbr [new Application/Traffic/CBR]
+set d_udp_agent [new Agent/UDP]
+set l_null_agent [new Agent/NUll]
 
-$ns attach-agent $node_(3) $d_udp
-$ns attach-agent $node_(8) $l_cbr
-$ns connect $d_udp $l_cbr
+$ns attach-agent $node_(3) $d_udp_agent
+$ns attach-agent $node_(8) $l_null_agent
 
-$l_cbr attach-agent $a_udp
-$l_cbr set packetSize_ $val(packet_size)
-$l_cbr set rate_ $val(rate)
+$ns connect $d_udp_agent $l_null_agent
 
+# =======================
+# Create CBR traffic for node a-h 
+# =======================
+set ah_cbr [new Application/Traffic/CBR]
+$ah_cbr attach-agent $a_udp_agent
+$ah_cbr set packetSize_ $val(packet_size)
+$ah_cbr set rate_ $val(rate)
+
+# =======================
+# Create CBR traffic for node d-l
+# =======================
+set dl_cbr [new Application/Traffic/CBR]
+$dl_cbr attach-agent $d_udp_agent
+$dl_cbr set packetSize_ $val(packet_size)
+$dl_cbr set rate_ $val(rate)
+ 
 # =======================
 # Running agents
 # =======================
@@ -195,7 +203,7 @@ $ns at $val(start_time) "$d_udp start"
 $ns at $val(run_time)   "$d_udp stop"
 
 
-for {set i 0} {$i < $val(size)} {incr i} {
+for {set i 0} {$i < $opt(size)} {incr i} {
     $ns initial_node_pos $node_($i) 40
     $ns at $val(run_time) "$node_($i) reset";
 }
