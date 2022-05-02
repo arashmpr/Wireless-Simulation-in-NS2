@@ -44,8 +44,8 @@ set ns [new Simulator]
 set trace_file [open wireless_trace_file.tr w]
 $ns trace-all $trace_file
 
-# set nam_file [open wireless_nam_file w]
-# $ns namtrace-all-wireless $nam_file 500 500
+set nam_file [open wireless_nam_file w]
+$ns namtrace-all-wireless $nam_file 500 500
 
 # =======================
 # Define Finish proc
