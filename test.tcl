@@ -140,7 +140,7 @@ for {set i 0} {$i < $val(nn) } {incr i} {
 $ns_ at 150.0 "stop"
 $ns_ at 150.01 "puts \"NS EXITING...\" ; $ns_ halt"
 proc stop {} {
-    global ns_ tracefd
+    global ns_ tracefd namfile
     $ns_ flush-trace
     close $tracefd
     close $namfile
